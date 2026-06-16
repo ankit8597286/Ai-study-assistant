@@ -7,12 +7,6 @@ const router =
 const {
   generatePlan,
   getPlans,
-} = require(
-  "../controllers/plannerController"
-);
-
-const {
-  generatePlanner,
   downloadPlannerPDF,
 } = require(
   "../controllers/plannerController"

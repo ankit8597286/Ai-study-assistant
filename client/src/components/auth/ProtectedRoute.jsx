@@ -14,6 +14,7 @@ export default function ProtectedRoute({
     useState(false);
 
   useEffect(() => {
+    const token = typeof window !== 'undefined' ? localStorage.getItem("token") : null;
 
     if (!token) {
 

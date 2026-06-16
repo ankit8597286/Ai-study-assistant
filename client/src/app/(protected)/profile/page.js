@@ -9,12 +9,14 @@ export default function ProfilePage() {
 
   useEffect(() => {
 
-    const storedUser =
-      JSON.parse(
-        localStorage.getItem("user")
-      );
+    if (typeof window !== 'undefined') {
+      const storedUser =
+        JSON.parse(
+          localStorage.getItem("user")
+        );
 
-    setUser(storedUser);
+      setUser(storedUser);
+    }
 
   }, []);
 

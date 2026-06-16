@@ -18,7 +18,7 @@ export default function SettingsPage() {
     const [name, setName] = useState("");
     const [message, setMessage] = useState("");
     const [errorMessage, setErrorMessage] = useState("");
-    const [newPassword, setNewPassword,] = useState("");
+    const [newPassword, setNewPassword] = useState("");
     const [
         currentPassword,
         setCurrentPassword
