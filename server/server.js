@@ -22,7 +22,7 @@ const flashcardRoutes =require( "./routes/flashcardRoutes");
 
 app.use(
   cors({
-    origin: "http://localhost:3000",
+    origin: true,
     credentials: true,
   })
 );
