@@ -126,7 +126,7 @@ const loginUser = async (
 
     res.cookie("token", token, {
       httpOnly: true,
-      ssecure: true,
+      secure: true,
       sameSite: "none",
       maxAge:
         7 *

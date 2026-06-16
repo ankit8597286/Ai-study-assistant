@@ -7,6 +7,7 @@ import Navbar from "@/components/layout/Navbar";
 import StatCard from "@/components/dashboard/StatCard";
 
 import { getDashboardStats } from "@/services/dashboardService";
+import { useRouter } from "next/navigation";
 
 import {
   FileText,
@@ -29,34 +30,33 @@ export default function Dashboard() {
 
   const [loading, setLoading] =
     useState(true);
+  const router = useRouter();
+
 
   useEffect(() => {
-    const fetchData =
-      async () => {
-        try {
-          const data =
-            await getDashboardStats();
+  const token = localStorage.getItem("token");
 
-          setStats(
-            data.stats
-          );
+  if (!token) {
+    router.push("/login");
+    return;
+  }
 
-          setRecentPDFs(
-            data.recentPDFs
-          );
+  const fetchData = async () => {
+    try {
+      const data = await getDashboardStats();
 
-          setRecentPlans(
-            data.recentPlans
-          );
-        } catch (error) {
-          console.log(error);
-        } finally {
-          setLoading(false);
-        }
-      };
+      setStats(data.stats);
+      setRecentPDFs(data.recentPDFs);
+      setRecentPlans(data.recentPlans);
+    } catch (error) {
+      console.log(error);
+    } finally {
+      setLoading(false);
+    }
+  };
 
-    fetchData();
-  }, []);
+  fetchData();
+}, [router]);
 
   if (loading) {
     return (
