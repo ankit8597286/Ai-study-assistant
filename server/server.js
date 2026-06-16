@@ -21,7 +21,8 @@ const flashcardRoutes =require( "./routes/flashcardRoutes");
 app.use(
   cors({
     origin: [
-      "https://ai-study-manager.netlify.app"
+      process.env.CLIENT_URL,
+      "http://localhost:3000",
     ],
     credentials: true,
   })

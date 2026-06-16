@@ -44,7 +44,10 @@ export default function UploadPage() {
         res.data.pdf.summary
       );
     } catch (error) {
-      console.log(error);
+      alert(
+        error.response?.data?.message ||
+        "Upload Failed"
+      );
     } finally {
       setLoading(false);
     }
