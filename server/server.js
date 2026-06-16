@@ -16,8 +16,6 @@ const dashboardRoutes = require("./routes/dashboardRoutes");
 const plannerRoutes = require("./routes/plannerRoutes");
 const flashcardRoutes =require( "./routes/flashcardRoutes");
 
-
-
 // Middleware
 
 app.use(

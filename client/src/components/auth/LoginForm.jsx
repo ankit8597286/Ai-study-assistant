@@ -51,6 +51,7 @@ export default function LoginForm() {
   };
 
   return (
+
     <div className="fixed inset-0 flex items-center justify-center bg-gradient-to-br from-[#0f172a] via-[#1e1b4b] to-[#312e81] overflow-hidden px-4 sm:px-6 lg:px-8">
 
       {/* Glow Effects */}
@@ -146,10 +147,24 @@ export default function LoginForm() {
                 Register
               </Link>
             </p>
+            {/* Footer Credit */}
+
+            <div className="mt-8 text-center border-t border-white/10 pt-4">
+              <p className="text-gray-400 text-sm">
+                AI Study Assistant
+              </p>
+
+              <p className="text-cyan-400 font-semibold">
+                Developed by Ankit Kumar
+              </p>
+            </div>
           </div>
 
         </form>
+
       </div>
+
     </div>
+
   );
 }

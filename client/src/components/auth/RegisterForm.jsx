@@ -158,6 +158,17 @@ export default function RegisterForm() {
                 Login
               </Link>
             </p>
+            {/* Footer Credit */}
+
+            <div className="mt-8 text-center border-t border-white/10 pt-4">
+              <p className="text-gray-400 text-sm">
+                AI Study Assistant
+              </p>
+
+              <p className="text-cyan-400 font-semibold">
+                Developed by Ankit Kumar
+              </p>
+            </div>
           </div>
 
         </form>

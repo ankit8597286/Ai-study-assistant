@@ -140,7 +140,7 @@ export default function Dashboard() {
           <div className="space-y-3">
 
             {recentPDFs.length >
-            0 ? (
+              0 ? (
               recentPDFs.map(
                 (pdf) => (
                   <div
@@ -186,7 +186,7 @@ export default function Dashboard() {
           <div className="space-y-3">
 
             {recentPlans.length >
-            0 ? (
+              0 ? (
               recentPlans.map(
                 (plan) => (
                   <div

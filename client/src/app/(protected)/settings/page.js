@@ -19,10 +19,10 @@ export default function SettingsPage() {
     const [message, setMessage] = useState("");
     const [errorMessage, setErrorMessage] = useState("");
     const [newPassword, setNewPassword,] = useState("");
-   const [
-  currentPassword,
-  setCurrentPassword
-] = useState("");
+    const [
+        currentPassword,
+        setCurrentPassword
+    ] = useState("");
 
     useEffect(() => {
 
@@ -431,6 +431,17 @@ export default function SettingsPage() {
 
                 </div>
 
+            </div>
+            {/* Footer Credit */}
+
+            <div className="mt-8 text-center border-t border-white/10 pt-4">
+                <p className="text-gray-400 text-sm">
+                    AI Study Assistant
+                </p>
+
+                <p className="text-cyan-400 font-semibold">
+                    Developed by Ankit Kumar
+                </p>
             </div>
 
         </div>
