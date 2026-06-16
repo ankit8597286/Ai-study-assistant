@@ -185,18 +185,18 @@ export default function Sidebar() {
             Logout
           </button>
           <div className="mt-auto pt-8 text-center">
-  <p className="text-gray-400 text-xs">
-    AI Study Assistant
-  </p>
+            <p className="text-gray-400 text-xs">
+              AI Study Assistant
+            </p>
 
-  <p className="text-cyan-400 text-sm font-semibold">
-    Developed by Ankit Kumar
-  </p>
+            <p className="text-cyan-400 text-sm font-semibold">
+              Developed by Ankit Kumar
+            </p>
 
-  <p className="text-white font-bold">
-    
-  </p>
-</div>
+            <p className="text-white font-bold">
+
+            </p>
+          </div>
         </div>
       </aside>
     </>
