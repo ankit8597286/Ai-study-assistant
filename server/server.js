@@ -18,15 +18,13 @@ const flashcardRoutes =require( "./routes/flashcardRoutes");
 
 // Middleware
 
-app.use(
-  cors({
-    origin: [
-      process.env.CLIENT_URL,
-      "http://localhost:3000",
-    ],
-    credentials: true,
-  })
-);
+app.use(cors({
+  origin: [
+    'https://ai-study-manager.netlify.app',
+    'http://localhost:3000'  // local dev ke liye
+  ],
+  credentials: true
+}));
 
 app.use(express.json());
 
