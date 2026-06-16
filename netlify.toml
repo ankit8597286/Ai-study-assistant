@@ -1,6 +1,3 @@
 [build]
-base = "client"
-command = "npm run build"
-
-[build.environment]
-NEXT_TELEMETRY_DISABLED = "1"
+command = "cd client && npm run build"
+publish = "client"
