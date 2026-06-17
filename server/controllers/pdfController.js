@@ -9,8 +9,6 @@ const groq = new Groq({
  apiKey: process.env.GROQ_API_KEY
 });
 
-// Upload PDF + Generate Summary
-
 const uploadPDF = async (
   req,
   res
@@ -25,8 +23,6 @@ const uploadPDF = async (
       });
     }
 
-    // Read uploaded PDF
-
     const dataBuffer =
       fs.readFileSync(
         req.file.path
@@ -34,8 +30,6 @@ const uploadPDF = async (
 
     const pdfData =
       await pdf(dataBuffer);
-
-    // Groq Summary
 
     const response =
   await groq.chat.completions.create({
@@ -55,10 +49,9 @@ ${pdfData.text}
 const summary =
   response.choices[0].message.content;
 
-    // Save in MongoDB
-
     const savedPDF =
       await Pdf.create({
+        userId: req.user.id,
         fileName:
           req.file.originalname,
 
@@ -70,8 +63,6 @@ const summary =
 
         summary,
       });
-
-    // Delete uploaded file after processing
 
     if (
       fs.existsSync(
@@ -102,8 +93,6 @@ const summary =
 };
 
 
-// Get All PDF History
-
 const getHistory = async (
   req,
   res
@@ -111,7 +100,9 @@ const getHistory = async (
   try {
 
     const pdfs =
-      await Pdf.find()
+      await Pdf.find({
+        userId: req.user.id
+      })
         .sort({
           createdAt: -1,
         });
@@ -141,9 +132,10 @@ const deletePDF = async (
   try {
 
     const pdf =
-      await Pdf.findByIdAndDelete(
-        req.params.id
-      );
+      await Pdf.findOne({
+        _id: req.params.id,
+        userId: req.user.id
+      });
 
     if (!pdf) {
       return res.status(404).json({
@@ -152,6 +144,8 @@ const deletePDF = async (
           "PDF not found",
       });
     }
+
+    await Pdf.findByIdAndDelete(req.params.id);
 
     res.status(200).json({
       success: true,
@@ -177,7 +171,9 @@ const getPDFs = async (
   try {
 
     const pdfs =
-      await Pdf.find()
+      await Pdf.find({
+        userId: req.user.id
+      })
         .select(
           "fileName text"
         )

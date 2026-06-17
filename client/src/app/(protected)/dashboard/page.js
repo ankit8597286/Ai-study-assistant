@@ -22,6 +22,9 @@ export default function Dashboard() {
   const [stats, setStats] =
     useState(null);
 
+  const [user, setUser] =
+    useState(null);
+
   const [recentPDFs, setRecentPDFs] =
     useState([]);
 
@@ -39,6 +42,15 @@ export default function Dashboard() {
   if (!token) {
     router.push("/login");
     return;
+  }
+
+  const storedUser = localStorage.getItem("user");
+  if (storedUser) {
+    try {
+      setUser(JSON.parse(storedUser));
+    } catch (e) {
+      console.error("Error parsing user:", e);
+    }
   }
 
   const fetchData = async () => {
@@ -77,7 +89,7 @@ export default function Dashboard() {
       <div className="mt-8">
 
         <h1 className="text-4xl md:text-5xl font-bold text-white">
-          Welcome Back 👋
+          Welcome Back{user?.name ? `, ${user.name}` : ""} 👋
         </h1>
 
         <p className="text-slate-300 mt-3">
@@ -91,7 +103,7 @@ export default function Dashboard() {
       <div className="grid sm:grid-cols-2 xl:grid-cols-3 gap-6 mt-8">
 
         <StatCard
-          title="PDF Uploaded"
+          title="My PDFs"
           value={
             stats?.totalPDFs || 0
           }
@@ -99,7 +111,7 @@ export default function Dashboard() {
         />
 
         <StatCard
-          title="Summaries"
+          title="My Summaries"
           value={
             stats?.totalPDFs || 0
           }
@@ -107,11 +119,19 @@ export default function Dashboard() {
         />
 
         <StatCard
-          title="Study Plans"
+          title="My Study Plans"
           value={
             stats?.totalPlans || 0
           }
           icon={Calendar}
+        />
+
+        <StatCard
+          title="My Flashcards"
+          value={
+            stats?.totalFlashcards || 0
+          }
+          icon={Brain}
         />
 
       </div>
@@ -134,7 +154,7 @@ export default function Dashboard() {
         >
 
           <h2 className="text-white text-xl font-bold mb-5">
-            📄 Recent PDFs
+            📄 My Recent PDFs
           </h2>
 
           <div className="space-y-3">
@@ -180,7 +200,7 @@ export default function Dashboard() {
         >
 
           <h2 className="text-white text-xl font-bold mb-5">
-            📅 Recent Plans
+            📅 My Recent Plans
           </h2>
 
           <div className="space-y-3">

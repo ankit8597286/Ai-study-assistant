@@ -1,5 +1,6 @@
 const Pdf = require("../models/Pdf");
 const Planner = require("../models/Planner");
+const Flashcard = require("../models/Flashcard");
 
 const getDashboardStats = async (
   req,
@@ -8,20 +9,33 @@ const getDashboardStats = async (
   try {
 
     const totalPDFs =
-      await Pdf.countDocuments();
+      await Pdf.countDocuments({
+        userId: req.user.id
+      });
 
     const totalPlans =
-      await Planner.countDocuments();
+      await Planner.countDocuments({
+        userId: req.user.id
+      });
+
+    const totalFlashcards =
+      await Flashcard.countDocuments({
+        userId: req.user.id
+      });
 
     const recentPDFs =
-      await Pdf.find()
+      await Pdf.find({
+        userId: req.user.id
+      })
         .sort({
           createdAt: -1,
         })
         .limit(5);
 
     const recentPlans =
-      await Planner.find()
+      await Planner.find({
+        userId: req.user.id
+      })
         .sort({
           createdAt: -1,
         })
@@ -33,6 +47,7 @@ const getDashboardStats = async (
       stats: {
         totalPDFs,
         totalPlans,
+        totalFlashcards,
       },
 
       recentPDFs,

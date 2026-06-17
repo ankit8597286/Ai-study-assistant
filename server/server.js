@@ -16,21 +16,16 @@ const dashboardRoutes = require("./routes/dashboardRoutes");
 const plannerRoutes = require("./routes/plannerRoutes");
 const flashcardRoutes =require( "./routes/flashcardRoutes");
 
-// Middleware
+const allowedOrigins = (process.env.CLIENT_URL || "http://localhost:3000").split(",");
 
 app.use(cors({
-  origin: [
-    'https://ai-study-manager.netlify.app',
-    'http://localhost:3000'  // local dev ke liye
-  ],
+  origin: allowedOrigins,
   credentials: true
 }));
 
 app.use(express.json());
 
 app.use(cookieParser());
-
-// Routes
 
 app.use("/api/auth", authRoutes);
 app.use("/api/pdf", pdfRoutes);

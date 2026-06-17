@@ -4,6 +4,9 @@ const express =
 const router =
   express.Router();
 
+const authMiddleware =
+  require("../middleware/authMiddleware");
+
 const {
   getDashboardStats,
 } = require(
@@ -12,6 +15,7 @@ const {
 
 router.get(
   "/stats",
+  authMiddleware,
   getDashboardStats
 );
 

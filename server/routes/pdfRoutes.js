@@ -1,7 +1,10 @@
-
 const express = require("express");
 
 const router = express.Router();
+
+const authMiddleware = require(
+  "../middleware/authMiddleware"
+);
 
 const upload = require(
   "../middleware/uploadMiddleware"
@@ -16,33 +19,29 @@ const {
   "../controllers/pdfController"
 );
 
-// Upload PDF + Generate Summary
-
 router.post(
   "/upload",
+  authMiddleware,
   upload.single("pdf"),
   uploadPDF
 );
 
-
-// Get All PDF History
-
 router.get(
   "/history",
+  authMiddleware,
   getHistory
 );
 
-// Delete history
-
 router.delete(
   "/:id",
+  authMiddleware,
   deletePDF
 );
 
 router.get(
   "/all",
+  authMiddleware,
   getPDFs
 );
-
 
 module.exports = router;

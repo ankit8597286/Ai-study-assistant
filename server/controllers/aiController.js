@@ -65,11 +65,11 @@ const generateFlashcards =
       }
 
       const response =
-  await groq.chat.completions.create({
-    messages: [
-      {
-        role: "user",
-        content: `
+        await groq.chat.completions.create({
+          messages: [
+            {
+              role: "user",
+              content: `
 Generate exactly 10 flashcards from the following study material.
 
 Return ONLY valid JSON.
@@ -85,13 +85,13 @@ Format:
 
 ${text}
 `,
-      },
-    ],
-    model: "llama-3.3-70b-versatile",
-  });
+            },
+          ],
+          model: "llama-3.3-70b-versatile",
+        });
 
-let flashcardsText =
-  response.choices[0].message.content;
+      let flashcardsText =
+        response.choices[0].message.content;
 
       flashcardsText =
         flashcardsText
@@ -111,6 +111,7 @@ let flashcardsText =
 
       const saved =
         await Flashcard.create({
+          userId: req.user.id,
           fileName,
           flashcards,
         });

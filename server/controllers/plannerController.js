@@ -62,6 +62,7 @@ const plan =
 
       const savedPlan =
         await Planner.create({
+          userId: req.user.id,
           subject,
           examDate,
           hoursPerDay,
@@ -90,7 +91,9 @@ const getPlans =
     try {
 
       const plans =
-        await Planner.find()
+        await Planner.find({
+          userId: req.user.id
+        })
           .sort({
             createdAt: -1,
           });
@@ -164,8 +167,44 @@ const getPlans =
 
   };
 
+  const deletePlan =
+  async (req, res) => {
+    try {
+
+      const plan =
+        await Planner.findOne({
+          _id: req.params.id,
+          userId: req.user.id,
+        });
+
+      if (!plan) {
+        return res.status(404).json({
+          success: false,
+          message: "Plan not found",
+        });
+      }
+
+      await Planner.findByIdAndDelete(req.params.id);
+
+      res.status(200).json({
+        success: true,
+        message: "Plan deleted successfully",
+      });
+
+    } catch (error) {
+
+      res.status(500).json({
+        success: false,
+        message:
+          error.message,
+      });
+
+    }
+  };
+
 module.exports = {
   generatePlan,
   getPlans,
   downloadPlannerPDF,
+  deletePlan,
 };

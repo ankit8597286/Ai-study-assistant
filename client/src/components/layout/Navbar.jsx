@@ -1,12 +1,14 @@
 "use client";
 
-import { Bell } from "lucide-react";
+import { Bell, LogOut } from "lucide-react";
 import { useEffect, useState } from "react";
+import { useRouter } from "next/navigation";
 
 export default function Navbar() {
 
   const [user, setUser] = useState(null);
   const [open, setOpen] = useState(false);
+  const router = useRouter();
 
   useEffect(() => {
 
@@ -37,8 +39,7 @@ export default function Navbar() {
       "user"
     );
 
-    window.location.href =
-      "/login";
+    router.push("/login");
 
   };
 
@@ -60,7 +61,7 @@ export default function Navbar() {
       <div>
 
         <h2 className="text-white text-xl font-bold">
-          Welcome Back 👋
+          Welcome Back, {user?.name || "User"} 👋
         </h2>
 
         <p className="text-gray-300 text-sm">
@@ -73,7 +74,7 @@ export default function Navbar() {
 
         <Bell
           size={20}
-          className="text-white"
+          className="text-white cursor-pointer hover:text-cyan-400 transition"
         />
 
         <div
@@ -121,11 +122,12 @@ export default function Navbar() {
       p-4
 
       shadow-2xl
+      z-50
       "
           >
 
             <h3 className="text-white font-bold">
-              {user?.name}
+              {user?.name || "User"}
             </h3>
 
             <p className="text-slate-400 text-sm">
@@ -146,8 +148,14 @@ export default function Navbar() {
                     rounded-xl
                     py-2
                     transition
-                    cursor-pointer "
+                    cursor-pointer
+                    flex
+                    items-center
+                    justify-center
+                    gap-2
+                    "
             >
+              <LogOut size={16} />
               Logout
             </button>
 
