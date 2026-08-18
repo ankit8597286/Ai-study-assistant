@@ -14,7 +14,8 @@ const pdfRoutes = require("./routes/pdfRoutes");
 const aiRoutes = require("./routes/aiRoutes");
 const dashboardRoutes = require("./routes/dashboardRoutes");
 const plannerRoutes = require("./routes/plannerRoutes");
-const flashcardRoutes =require( "./routes/flashcardRoutes");
+const flashcardRoutes = require("./routes/flashcardRoutes");
+const quizRoutes = require("./routes/quizRoutes");
 
 const allowedOrigins = (process.env.CLIENT_URL || "http://localhost:3000").split(",");
 
@@ -39,6 +40,7 @@ app.use(
   "/api/flashcards",
   flashcardRoutes
 );
+app.use("/api/quiz", quizRoutes);
 
 app.get("/", (req, res) => {
   res.send("Backend Running");
