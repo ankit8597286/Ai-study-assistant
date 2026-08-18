@@ -13,6 +13,7 @@ import {
   LogOut,
   User,
   Settings,
+  ClipboardCheck,
   Menu,
   X,
 } from "lucide-react";
@@ -48,6 +49,11 @@ export default function Sidebar() {
       name: "Planner",
       icon: Calendar,
       link: "/planner",
+    },
+    {
+      name: "Quiz & Tests",
+      icon: ClipboardCheck,
+      link: "/quiz",
     },
     {
       name: "History",
