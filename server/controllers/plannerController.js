@@ -1,11 +1,7 @@
 const Planner =
   require("../models/Planner");
 
-const Groq = require("groq-sdk");
-
-const groq = new Groq({
- apiKey: process.env.GROQ_API_KEY
-});
+const getGroqClient = require("../utils/groqClient");
 const PDFDocument = require("pdfkit");
 
 const generatePlan =
@@ -32,6 +28,8 @@ const generatePlan =
           });
       }
 
+      const groq = getGroqClient();
+
       const response =
   await groq.chat.completions.create({
     messages: [
@@ -54,7 +52,7 @@ Keep it simple and student friendly.
         `,
       },
     ],
-    model: "llama-3.3-70b-versatile",
+    model: getGroqClient.getModel(),
   });
 
 const plan =

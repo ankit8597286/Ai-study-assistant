@@ -123,7 +123,7 @@ ${sourceText}`;
 
     const response = await groq.chat.completions.create({
       messages: [{ role: "user", content: prompt }],
-      model: process.env.GROQ_MODEL || "openai/gpt-oss-120b",
+      model: getGroqClient.getModel(),
       temperature: 0.4,
     });
 

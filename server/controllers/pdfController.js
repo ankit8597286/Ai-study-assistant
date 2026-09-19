@@ -2,198 +2,158 @@ const fs = require("fs");
 const pdf = require("pdf-parse");
 
 const Pdf = require("../models/Pdf");
+const getGroqClient = require("../utils/groqClient");
 
-const Groq = require("groq-sdk");
+const uploadPDF = async (req, res) => {
+  let uploadedPath = null;
 
-const groq = new Groq({
- apiKey: process.env.GROQ_API_KEY
-});
-
-const uploadPDF = async (
-  req,
-  res
-) => {
   try {
-
     if (!req.file) {
       return res.status(400).json({
         success: false,
-        message:
-          "PDF file required",
+        message: "PDF file required",
       });
     }
 
-    const dataBuffer =
-      fs.readFileSync(
-        req.file.path
-      );
+    uploadedPath = req.file.path;
 
-    const pdfData =
-      await pdf(dataBuffer);
+    const dataBuffer = fs.readFileSync(uploadedPath);
+    const pdfData = await pdf(dataBuffer);
 
-    const response =
-  await groq.chat.completions.create({
-    messages: [
-      {
-        role: "user",
-        content: `
-Summarize the following study material in simple student-friendly language:
-
-${pdfData.text}
-        `,
-      },
-    ],
-    model: "llama-3.3-70b-versatile",
-  });
-
-const summary =
-  response.choices[0].message.content;
-
-    const savedPDF =
-      await Pdf.create({
-        userId: req.user.id,
-        fileName:
-          req.file.originalname,
-
-        pages:
-          pdfData.numpages,
-
-        text:
-          pdfData.text,
-
-        summary,
+    if (!pdfData.text?.trim()) {
+      return res.status(400).json({
+        success: false,
+        message: "No readable text found in the PDF",
       });
-
-    if (
-      fs.existsSync(
-        req.file.path
-      )
-    ) {
-      fs.unlinkSync(
-        req.file.path
-      );
     }
+
+    const groq = getGroqClient();
+
+    const response = await groq.chat.completions.create({
+      messages: [
+        {
+          role: "user",
+          content: `Summarize the following study material in simple student-friendly language.
+
+Include:
+- Main concepts
+- Important definitions
+- Key points
+- Useful examples where present
+
+STUDY MATERIAL:
+
+${pdfData.text}`,
+        },
+      ],
+      model: getGroqClient.getModel(),
+    });
+
+    const summary = response.choices?.[0]?.message?.content || "";
+
+    const savedPDF = await Pdf.create({
+      userId: req.user.id,
+      fileName: req.file.originalname,
+      pages: pdfData.numpages,
+      text: pdfData.text,
+      summary,
+    });
 
     return res.status(200).json({
       success: true,
       pdf: savedPDF,
     });
-
   } catch (error) {
-
-    console.error(error);
+    console.error("PDF upload/summary error:", error);
 
     return res.status(500).json({
       success: false,
-      message:
-        error.message,
+      message: error.message || "Unable to process PDF",
     });
-
+  } finally {
+    if (uploadedPath && fs.existsSync(uploadedPath)) {
+      try {
+        fs.unlinkSync(uploadedPath);
+      } catch (cleanupError) {
+        console.error("Uploaded PDF cleanup error:", cleanupError);
+      }
+    }
   }
 };
 
-
-const getHistory = async (
-  req,
-  res
-) => {
+const getHistory = async (req, res) => {
   try {
-
-    const pdfs =
-      await Pdf.find({
-        userId: req.user.id
-      })
-        .sort({
-          createdAt: -1,
-        });
+    const pdfs = await Pdf.find({
+      userId: req.user.id,
+    }).sort({
+      createdAt: -1,
+    });
 
     return res.status(200).json({
       success: true,
       pdfs,
     });
-
   } catch (error) {
-
-    console.error(error);
+    console.error("PDF history error:", error);
 
     return res.status(500).json({
       success: false,
-      message:
-        error.message,
+      message: error.message,
     });
-
   }
 };
 
-const deletePDF = async (
-  req,
-  res
-) => {
+const deletePDF = async (req, res) => {
   try {
+    const pdfDoc = await Pdf.findOne({
+      _id: req.params.id,
+      userId: req.user.id,
+    });
 
-    const pdf =
-      await Pdf.findOne({
-        _id: req.params.id,
-        userId: req.user.id
-      });
-
-    if (!pdf) {
+    if (!pdfDoc) {
       return res.status(404).json({
         success: false,
-        message:
-          "PDF not found",
+        message: "PDF not found",
       });
     }
 
     await Pdf.findByIdAndDelete(req.params.id);
 
-    res.status(200).json({
+    return res.status(200).json({
       success: true,
-      message:
-        "PDF deleted successfully",
+      message: "PDF deleted successfully",
     });
-
   } catch (error) {
+    console.error("PDF delete error:", error);
 
-    res.status(500).json({
+    return res.status(500).json({
       success: false,
-      message:
-        error.message,
+      message: error.message,
     });
-
   }
 };
 
-const getPDFs = async (
-  req,
-  res
-) => {
+const getPDFs = async (req, res) => {
   try {
+    const pdfs = await Pdf.find({
+      userId: req.user.id,
+    })
+      .select("fileName text")
+      .sort({
+        createdAt: -1,
+      });
 
-    const pdfs =
-      await Pdf.find({
-        userId: req.user.id
-      })
-        .select(
-          "fileName text"
-        )
-        .sort({
-          createdAt: -1,
-        });
-
-    res.status(200).json({
+    return res.status(200).json({
       success: true,
       pdfs,
     });
-
   } catch (error) {
+    console.error("Get PDFs error:", error);
 
-    res.status(500).json({
+    return res.status(500).json({
       success: false,
-      message:
-        error.message,
+      message: error.message,
     });
-
   }
 };
 
@@ -203,8 +163,3 @@ module.exports = {
   deletePDF,
   getPDFs,
 };
-
-
-
-
-
