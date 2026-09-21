@@ -56,7 +56,11 @@ Keep it simple and student friendly.
   });
 
 const plan =
-  response.choices[0].message.content;
+        response.choices?.[0]?.message?.content || "";
+
+      if (!plan) {
+        throw new Error("AI did not return a study plan");
+      }
 
       const savedPlan =
         await Planner.create({
@@ -119,6 +123,13 @@ const getPlans =
 
       const { plan } =
         req.body;
+
+      if (!plan || typeof plan !== "string") {
+        return res.status(400).json({
+          success: false,
+          message: "Plan content is required",
+        });
+      }
 
       const doc =
         new PDFDocument();

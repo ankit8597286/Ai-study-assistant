@@ -1,4 +1,4 @@
-const fs = require("fs");
+const fs = require("fs/promises");
 const pdf = require("pdf-parse");
 
 const Pdf = require("../models/Pdf");
@@ -17,10 +17,11 @@ const uploadPDF = async (req, res) => {
 
     uploadedPath = req.file.path;
 
-    const dataBuffer = fs.readFileSync(uploadedPath);
+    const dataBuffer = await fs.readFile(uploadedPath);
     const pdfData = await pdf(dataBuffer);
+    const extractedText = pdfData.text?.trim();
 
-    if (!pdfData.text?.trim()) {
+    if (!extractedText) {
       return res.status(400).json({
         success: false,
         message: "No readable text found in the PDF",
@@ -43,7 +44,7 @@ Include:
 
 STUDY MATERIAL:
 
-${pdfData.text}`,
+${extractedText.slice(0, 120000)}`,
         },
       ],
       model: getGroqClient.getModel(),
@@ -55,7 +56,7 @@ ${pdfData.text}`,
       userId: req.user.id,
       fileName: req.file.originalname,
       pages: pdfData.numpages,
-      text: pdfData.text,
+      text: extractedText,
       summary,
     });
 
@@ -83,11 +84,10 @@ ${pdfData.text}`,
 
 const getHistory = async (req, res) => {
   try {
-    const pdfs = await Pdf.find({
-      userId: req.user.id,
-    }).sort({
-      createdAt: -1,
-    });
+    const pdfs = await Pdf.find({ userId: req.user.id })
+      .select("fileName pages text summary createdAt")
+      .sort({ createdAt: -1 })
+      .lean();
 
     return res.status(200).json({
       success: true,
@@ -135,13 +135,12 @@ const deletePDF = async (req, res) => {
 
 const getPDFs = async (req, res) => {
   try {
-    const pdfs = await Pdf.find({
-      userId: req.user.id,
-    })
-      .select("fileName text")
+    const pdfs = await Pdf.find({ userId: req.user.id })
+      .select("fileName pages createdAt")
       .sort({
         createdAt: -1,
-      });
+      })
+      .lean();
 
     return res.status(200).json({
       success: true,

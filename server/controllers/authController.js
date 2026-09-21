@@ -2,229 +2,240 @@ const User = require("../models/User");
 const bcrypt = require("bcryptjs");
 const generateToken = require("../utils/generateToken");
 
-const isProduction =
-  process.env.NODE_ENV === "production";
+const isProduction = process.env.NODE_ENV === "production";
 
 const cookieOptions = {
   httpOnly: true,
   secure: isProduction,
   sameSite: isProduction ? "none" : "lax",
   maxAge: 7 * 24 * 60 * 60 * 1000,
+  path: "/",
 };
 
-// Register User
+const sanitizeUser = (user) => ({
+  id: user._id,
+  name: user.name,
+  email: user.email,
+});
+
 const registerUser = async (req, res) => {
-try {
-const { name, email, password } = req.body;
+  try {
+    const name = String(req.body.name || "").trim();
+    const email = String(req.body.email || "").trim().toLowerCase();
+    const password = String(req.body.password || "");
 
-if (!name || !email || !password) {
-  return res.status(400).json({
-    success: false,
-    message: "Name, email, and password are required",
-  });
-}
+    if (!name || !email || !password) {
+      return res.status(400).json({
+        success: false,
+        message: "Name, email, and password are required",
+      });
+    }
 
+    if (password.length < 6) {
+      return res.status(400).json({
+        success: false,
+        message: "Password must be at least 6 characters",
+      });
+    }
 
-const userExists = await User.findOne({ email });
+    const userExists = await User.findOne({ email });
 
-if (userExists) {
-  return res.status(400).json({
-    message: "User already exists",
-  });
-}
+    if (userExists) {
+      return res.status(409).json({
+        success: false,
+        message: "User already exists",
+      });
+    }
 
-const hashedPassword = await bcrypt.hash(password, 10);
+    const hashedPassword = await bcrypt.hash(password, 10);
 
-const user = await User.create({
-  name,
-  email,
-  password: hashedPassword,
-});
+    const user = await User.create({
+      name,
+      email,
+      password: hashedPassword,
+    });
 
-const token = generateToken(user._id);
+    const token = generateToken(user._id);
 
-res.cookie("token", token, {
-  ...cookieOptions,
-});
+    res.cookie("token", token, cookieOptions);
 
-res.status(201).json({
-  success: true,
-  token,
-  user: {
-    id: user._id,
-    name: user.name,
-    email: user.email,
-  },
-});
+    return res.status(201).json({
+      success: true,
+      token,
+      user: sanitizeUser(user),
+    });
+  } catch (error) {
+    console.error("Register error:", error);
 
-
-} catch (error) {
-res.status(500).json({
-message: error.message,
-});
-}
+    return res.status(500).json({
+      success: false,
+      message: error.message || "Registration failed",
+    });
+  }
 };
 
-// Login User
 const loginUser = async (req, res) => {
-try {
-const { email, password } = req.body;
+  try {
+    const email = String(req.body.email || "").trim().toLowerCase();
+    const password = String(req.body.password || "");
 
-if (!email || !password) {
-  return res.status(400).json({
-    success: false,
-    message: "Email and password are required",
-  });
-}
+    if (!email || !password) {
+      return res.status(400).json({
+        success: false,
+        message: "Email and password are required",
+      });
+    }
 
-const user = await User.findOne({ email });
+    const user = await User.findOne({ email });
 
-if (!user) {
-  return res.status(401).json({
-    message: "Invalid Email",
-  });
-}
+    if (!user) {
+      return res.status(401).json({
+        success: false,
+        message: "Invalid email or password",
+      });
+    }
 
-const isMatch = await bcrypt.compare(
-  password,
-  user.password
-);
+    const isMatch = await bcrypt.compare(password, user.password);
 
-if (!isMatch) {
-  return res.status(401).json({
-    message: "Invalid Password",
-  });
-}
+    if (!isMatch) {
+      return res.status(401).json({
+        success: false,
+        message: "Invalid email or password",
+      });
+    }
 
-const token = generateToken(user._id);
+    const token = generateToken(user._id);
 
-res.cookie("token", token, {
-  ...cookieOptions,
-});
+    res.cookie("token", token, cookieOptions);
 
-res.status(200).json({
-  success: true,
-  token,
-  user: {
-    id: user._id,
-    name: user.name,
-    email: user.email,
-  },
-});
+    return res.status(200).json({
+      success: true,
+      token,
+      user: sanitizeUser(user),
+    });
+  } catch (error) {
+    console.error("Login error:", error);
 
-
-} catch (error) {
-res.status(500).json({
-message: error.message,
-});
-}
+    return res.status(500).json({
+      success: false,
+      message: error.message || "Login failed",
+    });
+  }
 };
 
-// Update Profile
+const logoutUser = async (req, res) => {
+  res.clearCookie("token", {
+    httpOnly: true,
+    secure: isProduction,
+    sameSite: isProduction ? "none" : "lax",
+    path: "/",
+  });
+
+  return res.status(200).json({
+    success: true,
+    message: "Logged out successfully",
+  });
+};
+
 const updateProfile = async (req, res) => {
-try {
-const { userId, name } = req.body;
+  try {
+    const name = String(req.body.name || "").trim();
 
-if (!userId || !name) {
-  return res.status(400).json({
-    success: false,
-    message: "User ID and name are required",
-  });
-}
+    if (!name) {
+      return res.status(400).json({
+        success: false,
+        message: "Name is required",
+      });
+    }
 
-const user = await User.findById(userId);
+    const user = await User.findByIdAndUpdate(
+      req.user.id,
+      { name },
+      { new: true, runValidators: true }
+    );
 
-if (!user) {
-  return res.status(404).json({
-    success: false,
-    message: "User not found",
-  });
-}
+    if (!user) {
+      return res.status(404).json({
+        success: false,
+        message: "User not found",
+      });
+    }
 
-user.name = name;
+    return res.status(200).json({
+      success: true,
+      user: sanitizeUser(user),
+    });
+  } catch (error) {
+    console.error("Profile update error:", error);
 
-await user.save();
-
-res.status(200).json({
-  success: true,
-  user: {
-    id: user._id,
-    name: user.name,
-    email: user.email,
-  },
-});
-
-
-} catch (error) {
-res.status(500).json({
-success: false,
-message: error.message,
-});
-}
+    return res.status(500).json({
+      success: false,
+      message: error.message || "Profile update failed",
+    });
+  }
 };
 
-// Change Password
 const changePassword = async (req, res) => {
-try {
-const {
-userId,
-currentPassword,
-newPassword,
-} = req.body;
+  try {
+    const currentPassword = String(req.body.currentPassword || "");
+    const newPassword = String(req.body.newPassword || "");
 
-if (!userId || !currentPassword || !newPassword) {
-  return res.status(400).json({
-    success: false,
-    message: "User ID, current password, and new password are required",
-  });
-}
+    if (!currentPassword || !newPassword) {
+      return res.status(400).json({
+        success: false,
+        message: "Current password and new password are required",
+      });
+    }
 
+    if (newPassword.length < 6) {
+      return res.status(400).json({
+        success: false,
+        message: "New password must be at least 6 characters",
+      });
+    }
 
-const user = await User.findById(userId);
+    const user = await User.findById(req.user.id);
 
-if (!user) {
-  return res.status(404).json({
-    success: false,
-    message: "User not found",
-  });
-}
+    if (!user) {
+      return res.status(404).json({
+        success: false,
+        message: "User not found",
+      });
+    }
 
-const isMatch = await bcrypt.compare(
-  currentPassword,
-  user.password
-);
+    const isMatch = await bcrypt.compare(
+      currentPassword,
+      user.password
+    );
 
-if (!isMatch) {
-  return res.status(400).json({
-    success: false,
-    message: "Current password incorrect",
-  });
-}
+    if (!isMatch) {
+      return res.status(400).json({
+        success: false,
+        message: "Current password is incorrect",
+      });
+    }
 
-user.password = await bcrypt.hash(
-  newPassword,
-  10
-);
+    user.password = await bcrypt.hash(newPassword, 10);
+    await user.save();
 
-await user.save();
+    return res.status(200).json({
+      success: true,
+      message: "Password updated successfully",
+    });
+  } catch (error) {
+    console.error("Change password error:", error);
 
-res.status(200).json({
-  success: true,
-  message: "Password updated successfully",
-});
-
-
-} catch (error) {
-res.status(500).json({
-success: false,
-message: error.message,
-});
-}
+    return res.status(500).json({
+      success: false,
+      message: error.message || "Password update failed",
+    });
+  }
 };
 
 module.exports = {
-registerUser,
-loginUser,
-updateProfile,
-changePassword,
+  registerUser,
+  loginUser,
+  logoutUser,
+  updateProfile,
+  changePassword,
 };

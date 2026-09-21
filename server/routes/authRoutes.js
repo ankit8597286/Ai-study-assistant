@@ -1,36 +1,21 @@
 const express = require("express");
+const authMiddleware = require("../middleware/authMiddleware");
 
 const {
   registerUser,
   loginUser,
+  logoutUser,
   updateProfile,
   changePassword,
-} = require(
-  "../controllers/authController"
-);
+} = require("../controllers/authController");
 
-const router =
-  express.Router();
+const router = express.Router();
 
-router.post(
-  "/register",
-  registerUser
-);
+router.post("/register", registerUser);
+router.post("/login", loginUser);
+router.post("/logout", logoutUser);
 
-router.post(
-  "/login",
-  loginUser
-);
+router.put("/profile", authMiddleware, updateProfile);
+router.put("/change-password", authMiddleware, changePassword);
 
-router.put(
-  "/profile",
-  updateProfile
-);
-
-router.put(
-  "/change-password",
-  changePassword
-);
-
-module.exports =
-  router;
+module.exports = router;

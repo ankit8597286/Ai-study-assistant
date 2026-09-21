@@ -3,22 +3,19 @@ const Groq = require("groq-sdk");
 let groqClient = null;
 
 const getGroqClient = () => {
-  if (!process.env.GROQ_API_KEY) {
+  const apiKey = String(process.env.GROQ_API_KEY || "").trim();
+
+  if (!apiKey) {
     throw new Error("GROQ_API_KEY environment variable is required");
   }
 
   if (!groqClient) {
-    groqClient = new Groq({
-      apiKey: process.env.GROQ_API_KEY,
-    });
+    groqClient = new Groq({ apiKey });
   }
 
   return groqClient;
 };
 
-// Groq retired llama-3.3-70b-versatile for developer/free usage.
-// Prefer GPT-OSS 120B, while still allowing an explicit supported model
-// through GROQ_MODEL.
 const getGroqModel = () => {
   const configured = String(process.env.GROQ_MODEL || "").trim();
 
