@@ -10,23 +10,15 @@ export default function ProtectedRoute({
 
   const router = useRouter();
 
-  const [authorized, setAuthorized] =
-    useState(false);
+  const [authorized] = useState(() =>
+    typeof window !== "undefined" && Boolean(localStorage.getItem("token"))
+  );
 
   useEffect(() => {
-    const token = typeof window !== 'undefined' ? localStorage.getItem("token") : null;
-
-    if (!token) {
-
+    if (!authorized) {
       router.replace("/login");
-
-    } else {
-
-      setAuthorized(true);
-
     }
-
-  }, [router]);
+  }, [authorized, router]);
 
   if (!authorized) {
 

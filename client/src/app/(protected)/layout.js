@@ -1,25 +1,16 @@
 import Sidebar from "@/components/layout/Sidebar";
+import Navbar from "@/components/layout/Navbar";
 
-export default function ProtectedLayout({
-  children,
-}) {
+export default function ProtectedLayout({ children }) {
   return (
-    <div className="min-h-screen flex bg-gradient-to-br from-[#0f172a] via-[#1e1b4b] to-[#312e81]">
+    <div className="app-shell min-h-screen">
       <Sidebar />
-
-      <main
-  className="
-    flex-1
-    w-full
-    p-4
-    pt-16
-    md:p-6
-    md:pt-6
-    overflow-y-auto
-  "
->
-  {children}
-</main>
+      <main className="app-main min-h-screen md:ml-[17rem]">
+        <div className="page-wrap mx-auto w-full max-w-[1500px]">
+          <Navbar />
+          {children}
+        </div>
+      </main>
     </div>
   );
 }

@@ -1,594 +1,119 @@
 "use client";
 
 import { useEffect, useState } from "react";
-
-import {
-  FileText,
-  Calendar,
-  Search,
-  Sparkles,
-  Download,
-  Eye,
-  X,
-  Trash2,
-} from "lucide-react";
+import { FileText, CalendarDays, Search, Sparkles, Download, Eye, X, Trash2, BrainCircuit, Loader2 } from "lucide-react";
 import api from "@/services/api";
-import { downloadSummaryPDF, } from "@/utils/downloadPDF";
-import { deletePDF, } from "@/services/pdfService";
+import { downloadSummaryPDF } from "@/utils/downloadPDF";
+import { deletePDF } from "@/services/pdfService";
 import { useRouter } from "next/navigation";
 
 export default function SummaryPage() {
-
-  const [summaries, setSummaries] =
-    useState([]);
-
-  const [search, setSearch] =
-    useState("");
-
-  const [loading, setLoading] =
-    useState(true);
-
-  const [selectedSummary, setSelectedSummary] =
-    useState(null);
+  const [summaries, setSummaries] = useState([]);
+  const [search, setSearch] = useState("");
+  const [loading, setLoading] = useState(true);
+  const [selectedSummary, setSelectedSummary] = useState(null);
+  const [message, setMessage] = useState("");
+  const [generatingId, setGeneratingId] = useState(null);
   const router = useRouter();
 
-  const [message, setMessage] =
-    useState("");
-
   useEffect(() => {
-
-    const fetchSummaries =
-      async () => {
-
-        try {
-
-          const res =
-            await api.get(
-              "/pdf/history"
-            );
-
-          setSummaries(
-            res.data.pdfs || []
-          );
-
-        } catch (error) {
-
-          console.log(error);
-
-        } finally {
-
-          setLoading(false);
-
-        }
-
-      };
-
-    fetchSummaries();
-
+    (async () => {
+      try {
+        const res = await api.get("/pdf/history");
+        setSummaries(res.data.pdfs || []);
+      } catch (error) { console.error(error); }
+      finally { setLoading(false); }
+    })();
   }, []);
 
-  const filteredSummaries =
-    summaries.filter(
-      (item) =>
-        item.fileName
-          ?.toLowerCase()
-          .includes(
-            search.toLowerCase()
-          )
-    );
+  const filtered = summaries.filter((item) => item.fileName?.toLowerCase().includes(search.toLowerCase()));
 
-  const handleDelete =
-    async (id) => {
-
-      try {
-
-        await deletePDF(id);
-
-        setSummaries(
-          summaries.filter(
-            (item) =>
-              item._id !== id
-          )
-        );
-
-      } catch (error) {
-
-        console.log(error);
-
-      }
-
-    };
-  const handleGenerateFlashcards =
-  async (item) => {
-
+  const handleDelete = async (id) => {
     try {
+      await deletePDF(id);
+      setSummaries((prev) => prev.filter((item) => item._id !== id));
+    } catch (error) { console.error(error); }
+  };
 
-      setMessage(
-        "⏳ Generating Flashcards..."
-      );
-
-      await api.post(
-        "/ai/flashcards",
-        {
-          fileName:
-            item.fileName,
-
-          text:
-            item.text,
-        }
-      );
-
-      setMessage(
-        "🧠 Flashcards Generated Successfully"
-      );
-
-      setTimeout(() => {
-
-        router.push(
-          "/flashcards"
-        );
-
-      }, 1500);
-
+  const handleGenerateFlashcards = async (item) => {
+    try {
+      setGeneratingId(item._id);
+      setMessage("Generating flashcards…");
+      await api.post("/ai/flashcards", { fileName: item.fileName, text: item.text });
+      setMessage("Flashcards generated. Opening your deck…");
+      router.prefetch("/flashcards");
+      router.push("/flashcards");
     } catch (error) {
-
-      console.log(error);
-
-      setMessage(
-        "❌ Failed to Generate Flashcards"
-      );
-
-    }
-
+      setMessage(error.response?.data?.message || "Failed to generate flashcards.");
+    } finally { setGeneratingId(null); }
   };
 
   return (
-
-    <div className="relative min-h-screen overflow-hidden">
-
-      {/* Background */}
-
-      <div className="absolute inset-0 bg-gradient-to-br from-slate-950 via-indigo-950 to-slate-950" />
-
-      <div className="absolute top-0 left-0 w-96 h-96 bg-cyan-500/20 blur-[140px] rounded-full" />
-
-      <div className="absolute bottom-0 right-0 w-96 h-96 bg-purple-600/20 blur-[140px] rounded-full" />
-
-      <div className="relative z-10 p-4 md:p-8">
-
-        {/* Header */}
-
-        <div className="mb-10">
-
-          <h1
-            className="
-            text-4xl
-            md:text-6xl
-            font-black
-            text-white
-            flex
-            items-center
-            gap-3
-            "
-          >
-
-            <Sparkles className="text-cyan-400" />
-
-            Summary History
-
-          </h1>
-
-          <p className="text-slate-400 mt-3 text-lg">
-
-            View all AI generated summaries
-
-          </p>
-
+    <div className="relative pb-12">
+      <div className="ambient-orb orb-violet -left-24 top-20" />
+      <section className="page-header reveal">
+        <div>
+          <span className="eyebrow"><Sparkles size={13} /> Your AI notes</span>
+          <h1 className="mt-4 font-display text-4xl font-bold text-white sm:text-5xl">Summary <span className="gradient-text">library.</span></h1>
+          <p className="mt-3 max-w-2xl text-sm leading-6 text-slate-500 sm:text-base">Search, read, download or turn a summary into flashcards.</p>
         </div>
-
-        {/* Search */}
-
-        <div
-          className="
-          mb-8
-          bg-white/10
-          backdrop-blur-xl
-          border
-          border-white/10
-          rounded-2xl
-          p-4
-          flex
-          items-center
-          gap-3
-          "
-        >
-
-          <Search className="text-cyan-400" />
-
-          <input
-            type="text"
-            placeholder="Search PDF..."
-            value={search}
-            onChange={(e) =>
-              setSearch(
-                e.target.value
-              )
-            }
-            className="
-            bg-transparent
-            outline-none
-            w-full
-            text-white
-            "
-          />
-
+        <div className="relative w-full sm:w-80">
+          <Search size={17} className="pointer-events-none absolute left-3.5 top-1/2 -translate-y-1/2 text-slate-600" />
+          <input className="input-glass pl-10" value={search} onChange={(e) => setSearch(e.target.value)} placeholder="Search by file name…" />
         </div>
+      </section>
 
-        {
-          message && (
+      {message && <div className="mb-5 rounded-2xl border border-cyan-300/12 bg-cyan-300/5 p-4 text-sm text-cyan-100 reveal">{message}</div>}
 
-            <div
-              className="
-      mb-6
-
-      bg-green-500/20
-
-      border
-      border-green-500/30
-
-      text-green-300
-
-      p-4
-
-      rounded-xl
-      "
-            >
-              {message}
-            </div>
-
-          )
-        }
-
-        {/* Loading */}
-
-        {loading && (
-
-          <div
-            className="
-            text-center
-            text-cyan-400
-            text-2xl
-            animate-pulse
-            "
-          >
-            Loading...
-          </div>
-
-        )}
-
-        {/* Cards */}
-
-        <div className="grid gap-6">
-
-          {!loading &&
-            filteredSummaries.map(
-              (item) => (
-
-                <div
-                  key={item._id}
-                  className="
-                  bg-white/10
-                  backdrop-blur-xl
-                  border
-                  border-white/10
-                  rounded-3xl
-                  p-6
-                  hover:border-cyan-400/40
-                  hover:shadow-cyan-500/10
-                  hover:shadow-2xl
-                  hover:scale-[1.01]
-                  transition-all
-                  duration-300
-                  "
-                >
-
-                  <div
-                    className="
-                    flex
-                    flex-col
-                    md:flex-row
-                    md:items-center
-                    md:justify-between
-                    gap-4
-                    "
-                  >
-
-                    <div className="flex items-center gap-4">
-
-                      <div
-                        className="
-                        w-14
-                        h-14
-                        rounded-2xl
-                        bg-gradient-to-r
-                        from-cyan-500
-                        to-purple-600
-                        flex
-                        items-center
-                        justify-center
-                        "
-                      >
-
-                        <FileText className="text-white" />
-
-                      </div>
-
-                      <div>
-
-                        <h2
-                          className="
-                          text-white
-                          font-bold
-                          text-lg
-                          md:text-xl
-                          "
-                        >
-                          {item.fileName}
-                        </h2>
-
-                        <div
-                          className="
-                          flex
-                          items-center
-                          gap-2
-                          text-slate-400
-                          mt-1
-                          "
-                        >
-
-                          <Calendar size={16} />
-
-                          {
-                            new Date(
-                              item.createdAt
-                            ).toLocaleString()
-                          }
-
-                        </div>
-
-                      </div>
-
-                    </div>
-
-                    <div
-                      className="
-                      px-4
-                      py-2
-                      rounded-full
-                      bg-cyan-500/20
-                      text-cyan-300
-                      font-semibold
-                      "
-                    >
-                      AI Summary
-                    </div>
-
+      {loading ? <Loading /> : filtered.length === 0 ? (
+        <div className="glass-panel flex min-h-[350px] flex-col items-center justify-center p-8 text-center">
+          <div className="icon-tile"><FileText size={24} /></div>
+          <h2 className="mt-4 font-display text-2xl font-bold text-white">{search ? "No summaries match" : "No summaries yet"}</h2>
+          <p className="mt-2 max-w-md text-sm leading-6 text-slate-600">{search ? "Try a different file name." : "Upload a PDF first, then your generated summaries will appear here."}</p>
+        </div>
+      ) : (
+        <div className="grid gap-4">
+          {filtered.map((item, index) => (
+            <article key={item._id} className="glass-panel glass-panel-hover p-5 sm:p-6 reveal">
+              <div className="flex flex-col gap-4 md:flex-row md:items-center md:justify-between">
+                <div className="flex min-w-0 items-center gap-4">
+                  <div className="icon-tile h-14 w-14 rounded-2xl"><FileText size={21} /></div>
+                  <div className="min-w-0">
+                    <h2 className="truncate font-display text-lg font-bold text-white sm:text-xl">{item.fileName}</h2>
+                    <p className="mt-1 flex items-center gap-1.5 text-xs text-slate-600"><CalendarDays size={12} /> {new Date(item.createdAt).toLocaleString()}</p>
                   </div>
-
-                  <div
-                    className="
-                    mt-6
-                    bg-white/5
-                    rounded-2xl
-                    p-5
-                    text-slate-300
-                    leading-8
-                    "
-                  >
-
-                    {
-                      item.summary?.slice(
-                        0,
-                        300
-                      )
-                    }
-
-                    ...
-
-                    <div className="flex flex-wrap gap-3 mt-6">
-
-                      <button
-                        onClick={() =>
-                          setSelectedSummary(
-                            item
-                          )
-                        }
-                        className="
-                        flex
-                        items-center
-                        gap-2
-                        px-4
-                        py-2
-                        rounded-xl
-                        bg-cyan-600
-                        hover:bg-cyan-700
-                        text-white
-                        transition
-                        "
-                      >
-                        <Eye size={18} />
-                        View Full
-                      </button>
-
-                      <button
-                        onClick={() =>
-                          downloadSummaryPDF(
-                            item.fileName,
-                            item.summary
-                          )
-                        }
-                        className="
-                        flex
-                        items-center
-                        gap-2
-                        px-4
-                        py-2
-                        rounded-xl
-                        bg-green-600
-                        hover:bg-green-700
-                        text-white
-                        transition
-                        "
-                      >
-                        <Download size={18} />
-                        Download PDF
-                      </button>
-                      <button
-                        onClick={() =>
-                          handleDelete(
-                            item._id
-                          )
-                        }
-                        className="
-  flex
-  items-center
-  gap-2
-
-  px-4
-  py-2
-
-  rounded-xl
-
-  bg-red-600
-  hover:bg-red-700
-
-  text-white
-  "
-                      >
-                        <Trash2 size={18} />
-                        Delete
-                      </button>
-
-                      <button
-                        onClick={() =>
-                          handleGenerateFlashcards(
-                            item
-                          )
-                        }
-                        className="
-  flex
-  items-center
-  gap-2
-
-  px-4
-  py-2
-
-  rounded-xl
-
-  bg-purple-600
-  hover:bg-purple-700
-
-  text-white
-  "
-                      >
-                        🧠 Generate Flashcards
-                      </button>
-
-                    </div>
-
-                  </div>
-
                 </div>
+                <span className="status-pill md:self-start"><span className="h-1.5 w-1.5 rounded-full bg-cyan-300" /> AI generated</span>
+              </div>
 
-              )
-            )}
-
+              <div className="mt-5 rounded-2xl border border-white/6 bg-white/[.025] p-4 sm:p-5">
+                <p className="line-clamp-5 whitespace-pre-wrap text-sm leading-7 text-slate-400">{item.summary || "No summary text available."}</p>
+                <div className="mt-5 flex flex-wrap gap-2 border-t border-white/6 pt-4">
+                  <button onClick={() => setSelectedSummary(item)} className="btn-primary"><Eye size={16} /> View full</button>
+                  <button onClick={() => downloadSummaryPDF(item.fileName, item.summary)} className="btn-secondary"><Download size={16} /> Download</button>
+                  <button onClick={() => handleGenerateFlashcards(item)} disabled={generatingId === item._id} className="btn-secondary">
+                    {generatingId === item._id ? <><Loader2 size={16} className="animate-spin" /> Generating</> : <><BrainCircuit size={16} /> Flashcards</>}
+                  </button>
+                  <button onClick={() => handleDelete(item._id)} className="btn-danger ml-auto"><Trash2 size={16} /> Delete</button>
+                </div>
+              </div>
+            </article>
+          ))}
         </div>
+      )}
 
-      </div>
-
-      {/* Modal */}
-
-      {
-        selectedSummary && (
-
-          <div
-            className="
-            fixed
-            inset-0
-            z-50
-            bg-black/70
-            flex
-            justify-center
-            items-center
-            p-4
-            "
-          >
-
-            <div
-              className="
-              w-full
-              max-w-4xl
-              max-h-[85vh]
-              overflow-y-auto
-
-              bg-slate-900
-
-              border
-              border-cyan-500/30
-
-              rounded-3xl
-
-              p-6
-              "
-            >
-
-              <div className="flex justify-between items-center mb-6">
-
-                <h2 className="text-2xl font-bold text-white">
-
-                  {
-                    selectedSummary.fileName
-                  }
-
-                </h2>
-
-                <button
-                  onClick={() =>
-                    setSelectedSummary(
-                      null
-                    )
-                  }
-                >
-
-                  <X className="text-white" />
-
-                </button>
-
-              </div>
-
-              <div
-                className="
-                text-slate-300
-                whitespace-pre-wrap
-                leading-8
-                "
-              >
-
-                {
-                  selectedSummary.summary
-                }
-
-              </div>
-
+      {selectedSummary && (
+        <div className="fixed inset-0 z-[100] flex items-center justify-center bg-black/72 p-4 backdrop-blur-md">
+          <div className="glass-panel max-h-[88vh] w-full max-w-4xl overflow-hidden border-cyan-300/15">
+            <div className="flex items-center justify-between gap-4 border-b border-white/8 p-5 sm:p-6">
+              <div className="min-w-0"><p className="eyebrow w-fit">AI Summary</p><h2 className="mt-2 truncate font-display text-xl font-bold text-white sm:text-2xl">{selectedSummary.fileName}</h2></div>
+              <button onClick={() => setSelectedSummary(null)} className="grid h-10 w-10 shrink-0 place-items-center rounded-xl bg-white/[.04] text-slate-400 hover:text-white"><X size={19} /></button>
             </div>
-
+            <div className="max-h-[70vh] overflow-y-auto whitespace-pre-wrap p-5 text-sm leading-7 text-slate-300 sm:p-7">{selectedSummary.summary}</div>
           </div>
-
-        )
-      }
-
+        </div>
+      )}
     </div>
-
   );
 }
+function Loading() { return <div className="grid gap-3">{[1,2,3].map((i) => <div key={i} className="glass-panel shimmer h-40" />)}</div>; }

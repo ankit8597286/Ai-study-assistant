@@ -1,107 +1,17 @@
-export default function StatCard({
-  title,
-  value,
-  icon: Icon,
-}) {
+export default function StatCard({ title, value, icon: Icon }) {
   return (
-    <div
-      className="
-      relative
-      overflow-hidden
-
-      bg-white/10
-      backdrop-blur-2xl
-
-      border
-      border-white/10
-
-      rounded-3xl
-
-      p-6
-
-      hover:scale-[1.03]
-      hover:border-cyan-400/40
-      hover:shadow-cyan-500/20
-      hover:shadow-2xl
-
-      transition-all
-      duration-300
-      "
-    >
-
-      {/* Glow Effect */}
-
-      <div
-        className="
-        absolute
-        -top-10
-        -right-10
-
-        w-32
-        h-32
-
-        bg-cyan-500/10
-        blur-3xl
-        rounded-full
-        "
-      />
-
-      <div className="relative z-10 flex justify-between items-center">
-
+    <div className="glass-panel glass-panel-hover reveal relative overflow-hidden p-5">
+      <div className="absolute -right-10 -top-10 h-32 w-32 rounded-full bg-cyan-300/8 blur-3xl" />
+      <div className="relative flex items-start justify-between gap-4">
         <div>
-
-          <p
-            className="
-            text-slate-300
-            text-sm
-            uppercase
-            tracking-wider
-            "
-          >
-            {title}
-          </p>
-
-          <h2
-            className="
-            text-white
-            text-4xl
-            font-bold
-            mt-3
-            "
-          >
-            {value}
-          </h2>
-
+          <p className="text-xs font-bold uppercase tracking-[.16em] text-slate-500">{title}</p>
+          <p className="mt-3 font-display text-4xl font-bold text-white">{value}</p>
+          <p className="mt-1 text-xs text-slate-600">Updated from your workspace</p>
         </div>
-
-        <div
-          className="
-          w-16
-          h-16
-
-          rounded-2xl
-
-          bg-gradient-to-r
-          from-cyan-500
-          to-purple-600
-
-          flex
-          items-center
-          justify-center
-
-          shadow-lg
-          "
-        >
-
-          <Icon
-            size={30}
-            className="text-white"
-          />
-
+        <div className="icon-tile float-slow">
+          <Icon size={22} />
         </div>
-
       </div>
-
     </div>
   );
 }

@@ -2,14 +2,26 @@
 
 import { useState } from "react";
 import { useRouter } from "next/navigation";
-import { Mail, Lock, Eye, EyeOff, CheckCircle, Sparkles, AlertCircle } from "lucide-react";
-
-import api from "@/services/api";
+import {
+  ArrowRight,
+  AlertCircle,
+  BrainCircuit,
+  BookOpenText,
+  CalendarDays,
+  CheckCircle,
+  Eye,
+  EyeOff,
+  Lock,
+  Mail,
+  Sparkles,
+} from "lucide-react";
 import Link from "next/link";
+import api from "@/services/api";
+import AuthField from "@/components/auth/AuthField";
+import AuthShell from "@/components/auth/AuthShell";
 
 export default function LoginForm() {
   const router = useRouter();
-
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [showPassword, setShowPassword] = useState(false);
@@ -17,154 +29,120 @@ export default function LoginForm() {
   const [successMessage, setSuccessMessage] = useState("");
   const [errorMessage, setErrorMessage] = useState("");
 
-  const handleLogin = async (e) => {
-    e.preventDefault();
+  const handleLogin = async (event) => {
+    event.preventDefault();
+    if (loading) return;
+
+    setLoading(true);
+    setErrorMessage("");
+    setSuccessMessage("");
 
     try {
-      setLoading(true);
-      setErrorMessage("");
-      setSuccessMessage("");
+      const res = await api.post("/auth/login", { email: email.trim(), password });
+      localStorage.setItem("user", JSON.stringify(res.data.user || {}));
+      if (res.data.token) localStorage.setItem("token", res.data.token);
 
-      const res = await api.post("/auth/login", { email, password });
-
-      // FIX 1: Removed duplicate localStorage.setItem for "user"
-      localStorage.setItem("user", JSON.stringify(res.data.user));
-
-      // FIX 2: Also store token if your API returns one
-      if (res.data.token) {
-        localStorage.setItem("token", res.data.token);
-      }
-
-      setSuccessMessage("🎉 Login Successful! Redirecting to dashboard...");
-
-      setTimeout(() => {
-        router.push("/dashboard");
-      }, 1500);
-
+      setSuccessMessage("Signed in successfully.");
+      router.prefetch("/dashboard");
+      router.replace("/dashboard");
     } catch (error) {
       setErrorMessage(
-        error.response?.data?.message || "Invalid Email or Password"
+        error.userMessage ||
+          error.response?.data?.message ||
+          "We couldn't sign you in. Please check your email and password."
       );
-    } finally {
       setLoading(false);
     }
   };
 
   return (
-
-    <div className="fixed inset-0 flex items-center justify-center bg-gradient-to-br from-[#0f172a] via-[#1e1b4b] to-[#312e81] overflow-hidden px-4 sm:px-6 lg:px-8">
-
-      {/* Glow Effects */}
-      <div className="absolute top-0 left-0 w-72 h-72 bg-cyan-500 rounded-full blur-[120px] opacity-20"></div>
-      <div className="absolute bottom-0 right-0 w-72 h-72 bg-purple-600 rounded-full blur-[120px] opacity-20"></div>
-
-      {/* Card */}
-      <div className="relative w-full max-w-[420px] backdrop-blur-xl bg-white/10 border border-white/20 shadow-2xl rounded-3xl p-6 sm:p-8 text-white">
-
-        {/* Logo */}
-        <div className="flex justify-center mb-5">
-          <div className="bg-gradient-to-r from-cyan-400 to-purple-500 p-4 rounded-2xl shadow-lg">
-            <Sparkles size={32} />
-          </div>
+    <AuthShell
+      badge="Welcome back"
+      title={<>Your next study session <span className="gradient-text">starts here.</span></>}
+      copy="Keep your PDFs, AI summaries, flashcards, plans and tests inside one calm, focused workspace."
+      visualTitle="One workspace. Less friction."
+      visualItems={[
+        [BookOpenText, "Read less, understand more", "Turn dense material into student-friendly summaries."],
+        [BrainCircuit, "Recall on demand", "Practice with AI-generated flashcards and tests."],
+        [CalendarDays, "Study with a plan", "Organize revision around your exam date."],
+      ]}
+    >
+      <div className="mb-7 auth-form-intro">
+        <div className="mb-4 grid h-12 w-12 place-items-center rounded-2xl bg-gradient-to-br from-cyan-300 to-violet-500 text-[#061018] shadow-[0_12px_32px_rgba(103,232,249,.15)]">
+          <Sparkles size={21} />
         </div>
+        <div className="auth-mini-label">Student workspace</div>
+        <h2 className="mt-2 font-display text-3xl font-bold text-white">Sign in</h2>
+        <p className="mt-1 text-sm leading-6 text-slate-500">Use your account to continue learning.</p>
+      </div>
 
-        {/* Heading */}
-        <h2 className="text-3xl sm:text-4xl font-bold text-center">
-          Welcome Back
-        </h2>
+      {successMessage && <AuthAlert tone="success" icon={CheckCircle}>{successMessage}</AuthAlert>}
+      {errorMessage && <AuthAlert tone="error" icon={AlertCircle}>{errorMessage}</AuthAlert>}
 
-        <p className="text-center text-gray-300 mt-2 mb-8 text-sm sm:text-base">
-          Login to AI Study Assistant
-        </p>
+      <form onSubmit={handleLogin} className="space-y-4">
+        <AuthField icon={Mail} label="Email">
+          <input
+            className="auth-input"
+            type="email"
+            inputMode="email"
+            autoComplete="email"
+            placeholder="you@example.com"
+            value={email}
+            onChange={(event) => setEmail(event.target.value)}
+            required
+          />
+        </AuthField>
 
-        {/* FIX 3: Success Message */}
-        {successMessage && (
-          <div className="bg-green-500/20 border border-green-400 text-green-300 rounded-xl p-3 mb-5 flex items-center gap-2">
-            <CheckCircle size={18} />
-            <span className="text-sm">{successMessage}</span>
-          </div>
-        )}
-
-        {/* FIX 4: Error Message — was missing from JSX entirely */}
-        {errorMessage && (
-          <div className="bg-red-500/20 border border-red-400 text-red-300 rounded-xl p-3 mb-5 flex items-center gap-2">
-            <AlertCircle size={18} />
-            <span className="text-sm">{errorMessage}</span>
-          </div>
-        )}
-
-        <form onSubmit={handleLogin} className="space-y-5">
-
-          {/* Email */}
+        <AuthField icon={Lock} label="Password">
           <div className="relative">
-            <Mail size={18} className="absolute left-4 top-4 text-gray-300" />
             <input
-              type="email"
-              placeholder="Enter Email"
-              value={email}
-              onChange={(e) => setEmail(e.target.value)}
-              required
-              className="w-full bg-white/10 border border-white/20 rounded-xl py-3 sm:py-4 pl-12 pr-4 outline-none focus:border-cyan-400 transition"
-            />
-          </div>
-
-          {/* Password */}
-          <div className="relative">
-            <Lock size={18} className="absolute left-4 top-4 text-gray-300" />
-            <input
+              className="auth-input pr-12"
               type={showPassword ? "text" : "password"}
-              placeholder="Enter Password"
+              autoComplete="current-password"
+              placeholder="Enter your password"
               value={password}
-              onChange={(e) => setPassword(e.target.value)}
+              onChange={(event) => setPassword(event.target.value)}
               required
-              className="w-full bg-white/10 border border-white/20 rounded-xl py-3 sm:py-4 pl-12 pr-12 outline-none focus:border-cyan-400 transition"
             />
             <button
               type="button"
-              onClick={() => setShowPassword(!showPassword)}
-              className="absolute right-4 top-4 text-gray-300 hover:text-white transition"
+              onClick={() => setShowPassword((value) => !value)}
+              className="absolute right-3 top-1/2 grid h-9 w-9 -translate-y-1/2 place-items-center rounded-xl text-slate-500 transition hover:bg-white/[.06] hover:text-cyan-100"
+              aria-label={showPassword ? "Hide password" : "Show password"}
             >
-              {showPassword ? <EyeOff size={18} /> : <Eye size={18} />}
+              {showPassword ? <EyeOff size={17} /> : <Eye size={17} />}
             </button>
           </div>
+        </AuthField>
 
-          {/* Submit Button */}
-          <button
-            type="submit"
-            disabled={loading}
-            className="w-full py-3 sm:py-4 rounded-xl font-semibold bg-gradient-to-r from-cyan-500 to-purple-600 hover:scale-[1.02] transition-all duration-300 shadow-lg disabled:opacity-50"
-          >
-            {loading ? "Logging in..." : "Login"}
-          </button>
+        <button type="submit" disabled={loading} className="btn-primary w-full py-3.5">
+          {loading ? (
+            <>
+              <span className="spinner-dot" /> Signing in...
+            </>
+          ) : (
+            <>Continue to workspace <ArrowRight size={18} /></>
+          )}
+        </button>
+      </form>
 
-          <div className="text-center pt-2">
-            <p className="text-gray-300 text-sm">
-              Don't have an account?{" "}
-              <Link
-                href="/register"
-                className="text-cyan-400 hover:text-cyan-300 font-semibold transition"
-              >
-                Register
-              </Link>
-            </p>
-            {/* Footer Credit */}
+      <p className="mt-6 text-center text-sm text-slate-500">
+        New here? <Link href="/register" prefetch className="font-semibold text-cyan-200 transition hover:text-white">Create an account</Link>
+      </p>
+    </AuthShell>
+  );
+}
 
-            <div className="mt-8 text-center border-t border-white/10 pt-4">
-              <p className="text-gray-400 text-sm">
-                AI Study Assistant
-              </p>
+function AuthAlert({ tone, icon: Icon, children }) {
+  const styles =
+    tone === "success"
+      ? "border-emerald-300/15 bg-emerald-300/[.055] text-emerald-100"
+      : "border-rose-300/15 bg-rose-300/[.055] text-rose-100";
 
-              <p className="text-cyan-400 font-semibold">
-                Developed by Ankit Kumar
-              </p>
-            </div>
-          </div>
-
-        </form>
-
-      </div>
-
+  return (
+    <div className={`mb-5 flex items-start gap-2.5 rounded-2xl border p-3.5 text-sm ${styles}`}>
+      <Icon size={17} className="mt-0.5 shrink-0" />
+      <span>{children}</span>
     </div>
-
   );
 }

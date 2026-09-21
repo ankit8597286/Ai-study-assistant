@@ -2,13 +2,28 @@
 
 import { useState } from "react";
 import Link from "next/link";
-import { User, Mail, Lock, Eye, EyeOff, CheckCircle, Sparkles, AlertCircle } from "lucide-react";
 import { useRouter } from "next/navigation";
+import {
+  AlertCircle,
+  ArrowRight,
+  BrainCircuit,
+  CheckCircle,
+  Eye,
+  EyeOff,
+  FileText,
+  Lock,
+  Mail,
+  Sparkles,
+  Target,
+  Timer,
+  User,
+} from "lucide-react";
 import api from "@/services/api";
+import AuthField from "@/components/auth/AuthField";
+import AuthShell from "@/components/auth/AuthShell";
 
 export default function RegisterForm() {
   const router = useRouter();
-
   const [name, setName] = useState("");
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
@@ -17,162 +32,139 @@ export default function RegisterForm() {
   const [successMessage, setSuccessMessage] = useState("");
   const [errorMessage, setErrorMessage] = useState("");
 
-  const handleRegister = async (e) => {
-    e.preventDefault();
+  const handleRegister = async (event) => {
+    event.preventDefault();
+    if (loading) return;
+
+    setLoading(true);
+    setErrorMessage("");
+    setSuccessMessage("");
 
     try {
-      setLoading(true);
-      setErrorMessage("");
-      setSuccessMessage("");
-
-      await api.post("/auth/register", { name, email, password });
-
-      setSuccessMessage("🎉 Account Created Successfully! Redirecting to Login...");
-
-      // Reset Form
-      setName("");
-      setEmail("");
-      setPassword("");
-
-      // Redirect after 2 sec
-      setTimeout(() => {
-        router.push("/login");
-      }, 2000);
-
+      await api.post("/auth/register", {
+        name: name.trim(),
+        email: email.trim(),
+        password,
+      });
+      setSuccessMessage("Account created. Taking you to sign in...");
+      router.prefetch("/login");
+      router.replace("/login");
     } catch (error) {
-      // FIX 1: Replaced alert() with a proper inline error message
       setErrorMessage(
-        error.response?.data?.message || "Registration Failed. Please try again."
+        error.userMessage ||
+          error.response?.data?.message ||
+          "Registration failed. Please try again."
       );
-    } finally {
       setLoading(false);
     }
   };
 
   return (
-    <div className="fixed inset-0 flex items-center justify-center bg-gradient-to-br from-[#0f172a] via-[#1e1b4b] to-[#312e81] overflow-hidden px-4">
-
-      {/* Glow Effects */}
-      <div className="absolute top-0 left-0 w-80 h-80 bg-cyan-500 rounded-full blur-[120px] opacity-20"></div>
-      <div className="absolute bottom-0 right-0 w-80 h-80 bg-purple-600 rounded-full blur-[120px] opacity-20"></div>
-
-      {/* Card */}
-      <div className="relative w-full max-w-[430px] backdrop-blur-xl bg-white/10 border border-white/20 shadow-2xl rounded-3xl p-6 sm:p-8 text-white">
-
-        {/* Logo */}
-        <div className="flex justify-center mb-5">
-          <div className="bg-gradient-to-r from-cyan-400 to-purple-500 p-4 rounded-2xl shadow-lg">
-            <Sparkles size={32} />
-          </div>
+    <AuthShell
+      badge="Start learning smarter"
+      title={<>Build a study habit <span className="gradient-text">that sticks.</span></>}
+      copy="Create a focused learning workspace that turns your study material into summaries, flashcards, plans and timed practice."
+      visualTitle="What you can do here"
+      visualItems={[
+        [FileText, "Organize study material", "Keep uploaded PDFs and notes easy to revisit."],
+        [Target, "Practice with intent", "Create targeted quizzes from a topic or syllabus."],
+        [Timer, "Stay consistent", "Plan study time around your exam date and schedule."],
+      ]}
+    >
+      <div className="mb-7 auth-form-intro">
+        <div className="mb-4 grid h-12 w-12 place-items-center rounded-2xl bg-gradient-to-br from-cyan-300 to-violet-500 text-[#061018] shadow-[0_12px_32px_rgba(103,232,249,.15)]">
+          <Sparkles size={21} />
         </div>
+        <div className="auth-mini-label">New learner</div>
+        <h2 className="mt-2 font-display text-3xl font-bold text-white">Create account</h2>
+        <p className="mt-1 text-sm leading-6 text-slate-500">A cleaner place to study starts here.</p>
+      </div>
 
-        <h2 className="text-3xl sm:text-4xl font-bold text-center">
-          Create Account
-        </h2>
+      {successMessage && <AuthAlert tone="success" icon={CheckCircle}>{successMessage}</AuthAlert>}
+      {errorMessage && <AuthAlert tone="error" icon={AlertCircle}>{errorMessage}</AuthAlert>}
 
-        <p className="text-center text-gray-300 mt-2 mb-8">
-          Join AI Study Assistant
-        </p>
+      <form onSubmit={handleRegister} className="space-y-4">
+        <AuthField icon={User} label="Full name">
+          <input
+            className="auth-input"
+            type="text"
+            autoComplete="name"
+            placeholder="Your name"
+            value={name}
+            onChange={(event) => setName(event.target.value)}
+            required
+          />
+        </AuthField>
 
-        {/* Success Message */}
-        {successMessage && (
-          <div className="animate-pulse bg-green-500/20 border border-green-400 text-green-300 rounded-xl p-3 mb-5 flex items-center gap-2">
-            <CheckCircle size={18} />
-            <span className="text-sm">{successMessage}</span>
-          </div>
-        )}
+        <AuthField icon={Mail} label="Email">
+          <input
+            className="auth-input"
+            type="email"
+            inputMode="email"
+            autoComplete="email"
+            placeholder="you@example.com"
+            value={email}
+            onChange={(event) => setEmail(event.target.value)}
+            required
+          />
+        </AuthField>
 
-        {/* FIX 2: Error Message — replaced browser alert() with styled inline error */}
-        {errorMessage && (
-          <div className="bg-red-500/20 border border-red-400 text-red-300 rounded-xl p-3 mb-5 flex items-center gap-2">
-            <AlertCircle size={18} />
-            <span className="text-sm">{errorMessage}</span>
-          </div>
-        )}
-
-        <form onSubmit={handleRegister} className="space-y-5">
-
-          {/* Name */}
+        <AuthField icon={Lock} label="Password">
           <div className="relative">
-            <User size={18} className="absolute left-4 top-4 text-gray-300" />
             <input
-              type="text"
-              placeholder="Full Name"
-              value={name}
-              onChange={(e) => setName(e.target.value)}
-              className="w-full bg-white/10 border border-white/20 rounded-xl py-3 sm:py-4 pl-12 pr-4 outline-none focus:border-cyan-400 transition"
-              required
-            />
-          </div>
-
-          {/* Email */}
-          <div className="relative">
-            <Mail size={18} className="absolute left-4 top-4 text-gray-300" />
-            <input
-              type="email"
-              placeholder="Email Address"
-              value={email}
-              onChange={(e) => setEmail(e.target.value)}
-              className="w-full bg-white/10 border border-white/20 rounded-xl py-3 sm:py-4 pl-12 pr-4 outline-none focus:border-cyan-400 transition"
-              required
-            />
-          </div>
-
-          {/* Password */}
-          <div className="relative">
-            <Lock size={18} className="absolute left-4 top-4 text-gray-300" />
-            <input
+              className="auth-input pr-12"
               type={showPassword ? "text" : "password"}
-              placeholder="Password"
+              autoComplete="new-password"
+              placeholder="Create a password"
+              minLength={6}
               value={password}
-              onChange={(e) => setPassword(e.target.value)}
-              className="w-full bg-white/10 border border-white/20 rounded-xl py-3 sm:py-4 pl-12 pr-12 outline-none focus:border-cyan-400 transition"
+              onChange={(event) => setPassword(event.target.value)}
               required
             />
             <button
               type="button"
-              onClick={() => setShowPassword(!showPassword)}
-              className="absolute right-4 top-4 text-gray-300 hover:text-white transition"
+              onClick={() => setShowPassword((value) => !value)}
+              className="absolute right-3 top-1/2 grid h-9 w-9 -translate-y-1/2 place-items-center rounded-xl text-slate-500 transition hover:bg-white/[.06] hover:text-cyan-100"
+              aria-label={showPassword ? "Hide password" : "Show password"}
             >
-              {showPassword ? <EyeOff size={18} /> : <Eye size={18} />}
+              {showPassword ? <EyeOff size={17} /> : <Eye size={17} />}
             </button>
           </div>
+        </AuthField>
 
-          {/* Register Button */}
-          <button
-            type="submit"
-            disabled={loading}
-            className="w-full py-3 sm:py-4 rounded-xl font-semibold bg-gradient-to-r from-cyan-500 to-purple-600 hover:scale-[1.02] transition-all duration-300 shadow-lg disabled:opacity-50"
-          >
-            {loading ? "Creating Account..." : "Register"}
-          </button>
+        <div className="flex items-center gap-2 px-1 text-[11px] text-slate-600">
+          <BrainCircuit size={14} className="text-violet-200/70" />
+          Use at least 6 characters for your password.
+        </div>
 
-          {/* Login Link */}
-          <div className="text-center pt-2">
-            <p className="text-gray-300 text-sm">
-              Already have an account?{" "}
-              <Link
-                href="/login"
-                className="text-cyan-400 hover:text-cyan-300 font-semibold transition"
-              >
-                Login
-              </Link>
-            </p>
-            {/* Footer Credit */}
+        <button type="submit" disabled={loading} className="btn-primary w-full py-3.5">
+          {loading ? (
+            <>
+              <span className="spinner-dot" /> Creating account...
+            </>
+          ) : (
+            <>Create account <ArrowRight size={18} /></>
+          )}
+        </button>
+      </form>
 
-            <div className="mt-8 text-center border-t border-white/10 pt-4">
-              <p className="text-gray-400 text-sm">
-                AI Study Assistant
-              </p>
+      <p className="mt-6 text-center text-sm text-slate-500">
+        Already have an account? <Link href="/login" prefetch className="font-semibold text-cyan-200 transition hover:text-white">Sign in</Link>
+      </p>
+    </AuthShell>
+  );
+}
 
-              <p className="text-cyan-400 font-semibold">
-                Developed by Ankit Kumar
-              </p>
-            </div>
-          </div>
+function AuthAlert({ tone, icon: Icon, children }) {
+  const styles =
+    tone === "success"
+      ? "border-emerald-300/15 bg-emerald-300/[.055] text-emerald-100"
+      : "border-rose-300/15 bg-rose-300/[.055] text-rose-100";
 
-        </form>
-      </div>
+  return (
+    <div className={`mb-5 flex items-start gap-2.5 rounded-2xl border p-3.5 text-sm ${styles}`}>
+      <Icon size={17} className="mt-0.5 shrink-0" />
+      <span>{children}</span>
     </div>
   );
 }
